@@ -58,7 +58,7 @@ def detect_objects_in_images(image_folder):
 
     ws.cell(row=1, column=4, value="Общее количество машин на всех изображениях")
     ws.cell(row=2, column=4, value=total_cars_all_images)
-    wb.save("результаты.xlsx")
+    wb.save("results.xlsx")
 
     print("Обработка завершена.")
 
