@@ -2,6 +2,7 @@ from PIL import Image
 from imageai.Detection import ObjectDetection
 import os
 import tempfile
+from openpyxl import Workbook
 
 def crop_image(image_path):
     image = Image.open(image_path)
@@ -17,7 +18,7 @@ def detect_objects_in_images(image_folder):
     execution_path = os.getcwd()
     total_images = len([f for f in os.listdir(image_folder) if f.endswith('.jpg') or f.endswith('.png')])
     processed_images = 0
-    total_cars = 0
+    total_cars_all_images = 0
 
     # загружаем модель YOLOv3
     detector = ObjectDetection()
@@ -26,6 +27,10 @@ def detect_objects_in_images(image_folder):
     detector.loadModel()
 
     custom = detector.CustomObjects(car=True)
+
+    wb = Workbook()
+    ws = wb.active
+    ws.append(["Имя изображения", "Количество машин"])
 
     for image_file in os.listdir(image_folder):
         if image_file.endswith(".jpg") or image_file.endswith(".png"):
@@ -44,13 +49,18 @@ def detect_objects_in_images(image_folder):
                 detections = detector.detectObjectsFromImage(custom_objects=custom, input_image=temp_image_path, minimum_percentage_probability=5)
 
                 # считаем количество машин на изображении
-                for eachObject in detections:
-                    if eachObject["name"] == "car":
-                        total_cars += 1
+                total_cars = sum(1 for obj in detections if obj["name"] == "car")
+                total_cars_all_images += total_cars
+
+                ws.append([image_file, total_cars])
 
             os.unlink(temp_image_path)
 
-    print(f"Обработка завершена. Общее количество машин на всех изображениях: {total_cars}")
+    ws.cell(row=1, column=4, value="Общее количество машин на всех изображениях")
+    ws.cell(row=2, column=4, value=total_cars_all_images)
+    wb.save("результаты.xlsx")
+
+    print("Обработка завершена.")
 
 image_folder = input("Введите путь к директории с изображениями: ")
 
